@@ -14,7 +14,7 @@ import java.util.Iterator;
  * @author mh
  * @since 09.06.14
  */
-public class StoreBatchReader20 extends StoreBatchHandler20 implements StoreReader {
+public class StoreBatchReader extends StoreBatchHandler implements StoreReader {
 
     public static final String[] NO_LABELS = new String[0];
     private static final long NODE_RECORD = 14;

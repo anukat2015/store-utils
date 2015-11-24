@@ -11,7 +11,7 @@ import java.util.Map;
  * @author mh
  * @since 09.06.14
  */
-public class StoreBatchHandler20 implements StoreHandler {
+public class StoreBatchHandler implements StoreHandler {
 
 
 

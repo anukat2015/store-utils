@@ -3,10 +3,8 @@ package org.neo4j.tool;
 import org.apache.commons.io.FileUtils;
 import org.neo4j.tool.api.*;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
@@ -32,6 +30,7 @@ public class StoreCopyRevert {
                 put("neostore.propertystore.db.arrays.mapped_memory", "300M");
                 put("neostore.propertystore.db.index.keys.mapped_memory", "100M");
                 put("neostore.propertystore.db.index.mapped_memory", "100M");
+                put("dmbs.pagecache.memory", "2G");
                 put("cache_type", "none");
             }
         };
@@ -85,9 +84,9 @@ public class StoreCopyRevert {
         StoreReader sourceDb = null;
         StoreWriter targetDb = null;
         try {
-            sourceDb = createInstance("org.neo4j.tool.impl.StoreBatchReader20", fromVersion);
+            sourceDb = createInstance("org.neo4j.tool.impl.StoreBatchReader", "source-deps");
             sourceDb.init(source.getAbsolutePath(), config());
-            targetDb = createInstance("org.neo4j.tool.impl.StoreBatchWriter20", toVersion);
+            targetDb = createInstance("org.neo4j.tool.impl.StoreBatchWriter", "target-deps");
             targetDb.init(target.getAbsolutePath(), config());
 
             copyNodes(sourceDb, targetDb, ignoreProperties, ignoreLabels);
@@ -104,17 +103,31 @@ public class StoreCopyRevert {
 
     public static <T extends StoreHandler> T createInstance(String name, String version) {
         try {
-            File kernel = neo4jJar(version, "kernel");
-            File coll = neo4jJar(version, "primitive-collections");
-            File luceneIndex = neo4jJar(version, "lucene-index");
-            File lucene = lucene("3.6.2");
-            File myClasses = new File("neo4j20/target/classes");
-            URLClassLoader classLoader = new URLClassLoader(new URL[] {kernel.toURL(),coll.toURL(),luceneIndex.toURL(),lucene.toURL(),jta().toURL(),commonsIO().toURL(),myClasses.toURL()},StoreCopyRevert.class.getClassLoader());
+            // todo also use the built jar
+            File myClasses = new File("store-util-impl-2x/target/classes");
+
+            File[] neo4jJars = new File(version,"target"+File.separator+"dependency").listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(File file, String s) {
+                    return s.endsWith(".jar");
+                }
+            });
+            URL[] urls = urls(neo4jJars, myClasses);
+            URLClassLoader classLoader = new URLClassLoader(urls,StoreCopyRevert.class.getClassLoader());
+            System.err.println("Using JAR files "+Arrays.toString(urls));
             Class<?> targetClass = classLoader.loadClass(name);
             return (T)targetClass.newInstance();
         } catch(Exception e) {
             throw new RuntimeException("Error loading class "+name,e);
         }
+    }
+
+    private static URL[] urls(File[] files, File ... moreFiles) throws MalformedURLException {
+        URL[] result = new URL[files.length + moreFiles.length];
+        int i = 0;
+        for (File file : files) result[i++] = file.toURL();
+        for (File moreFile : moreFiles) result[i++] = moreFile.toURL();
+        return result;
     }
 
     private static File neo4jJar(String version, String module) {
@@ -130,6 +143,8 @@ public class StoreCopyRevert {
         return new File(System.getProperty("user.home"), ".m2/repository/org/apache/commons/commons-io/1.3.2/commons-io-1.3.2.jar");
     }
 
+    // todo index migraiton might be necessary, would need to use lucene or neo4j-lucene-index to read the docs
+    // and write via neo to the new store
     private static void copyIndex(File source, File target) throws IOException {
         final File indexFile = new File(source, "index.db");
         if (indexFile.exists()) {

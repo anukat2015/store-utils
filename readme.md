@@ -7,7 +7,7 @@ Ignores broken nodes and relationships.
 Also useful to skip no longer wanted properties or relationships with a certain type. Good for store compaction as it
 rewrites the store file reclaiming space that is sitting empty.
 
-It uses local .m2 repositories of the Neo4j versions that you provide.
+It uses local dependency copies in `source-deps` and `target-deps`.
 
 ### Store Copy
 

@@ -12,7 +12,7 @@ import org.neo4j.tool.api.StoreWriter;
  * @author mh
  * @since 09.06.14
  */
-public class StoreBatchWriter20 extends StoreBatchHandler20 implements StoreWriter {
+public class StoreBatchWriter extends StoreBatchHandler implements StoreWriter {
 
     static Label[] NO_LABELS = new Label[0];
 

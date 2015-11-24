@@ -4,7 +4,7 @@
 
     <groupId>org.neo4j.util</groupId>
     <artifactId>store-util-runner</artifactId>
-    <version>2.0.1</version>
+    <version>1.0</version>
     <packaging>jar</packaging>
 
     <name>store-util-runner</name>
@@ -28,7 +28,7 @@
         <dependency>
             <groupId>org.neo4j.util</groupId>
             <artifactId>store-util-api</artifactId>
-            <version>${project.version}</version>
+            <version>1.0</version>
         </dependency>
     </dependencies>
 
